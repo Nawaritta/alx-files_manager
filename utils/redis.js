@@ -18,29 +18,30 @@ class RedisClient {
 
   async get(key) {
     return new Promise((resolve, reject) => {
-        this.client.get(key, (error, reply) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(reply);
-            }
-        });
+      this.client.get(key, (error, reply) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(reply);
+        }
+      });
     });
-}
+  }
 
-async set(key, value) {
+  async set(key, value) {
     return new Promise((resolve, reject) => {
-        this.client.set(key, value, (error, reply) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(reply);
-            }
-        });
+      this.client.set(key, value, (error, reply) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(reply);
+        }
+      });
     });
-}
+  }
 
   async del(key) {
+    // eslint-disable-next-line no-unused-vars
     return new Promise((resolve, _reject) => {
       this.client.del(key, (error) => {
         if (error) {

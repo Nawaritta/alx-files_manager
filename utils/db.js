@@ -15,6 +15,7 @@ class DBClient {
       }
     });
   }
+
   isAlive() {
     return !!this.dbClient;
   }

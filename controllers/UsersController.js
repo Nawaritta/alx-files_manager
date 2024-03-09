@@ -1,5 +1,5 @@
-import dbClient from '../utils/db';
 import sha1 from 'sha1';
+import dbClient from '../utils/db';
 
 const UsersController = {
   async postNew(req, res) {
@@ -21,7 +21,7 @@ const UsersController = {
 
     const result = await dbClient.db().collection('users').insertOne({ email, password: hashedPassword });
     return res.status(201).send(`{ id: ${result.insertedId}, ${email} }`);
-  }
+  },
 };
 
 export default UsersController;
