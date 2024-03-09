@@ -1,4 +1,3 @@
-
 import { MongoClient } from 'mongodb';
 
 class DBClient {
@@ -11,21 +10,21 @@ class DBClient {
     MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
       if (err) {
         this.dbClient = false;
+      } else {
+        this.dbClient = client.db(database);
       }
-      this.dbClient = client.db(database);
     });
   }
-
   isAlive() {
-    return this.dbClient && this.dbClient.isConnected();
+    return !!this.dbClient;
   }
 
   async nbUsers() {
-    return this.db.collection('users').countDocuments();
+    return this.dbClient.collection('users').countDocuments();
   }
 
   async nbFiles() {
-    return this.db.collection('files').countDocuments();
+    return this.dbClient.collection('files').countDocuments();
   }
 }
 
