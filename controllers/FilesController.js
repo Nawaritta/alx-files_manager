@@ -62,7 +62,8 @@ class FilesController {
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
     //catch fileId validation
     const fileId = req.params.id;
-    const file = await dbClient.dbClient.collection('files').findOne({ _id: ObjectId(fileId), userId });
+    const file = await dbClient.dbClient.collection('files').findOne({ _id: ObjectId(fileId), userId:ObjectId(userId) });
+    //const file = await dbClient.dbClient.collection('files').findOne({ _id: ObjectId(fileId), userId });
     if (!file) return res.status(404).json({ error: 'Not found' });
     //delete file.localPath;
     return res.json(file);
@@ -91,13 +92,15 @@ class FilesController {
     }
     const page = parseInt(req.query.page, 10) || 0;
     const pageSize = 20;
-    const skip = page * pageSize;
     // if (page > 0) {
     //   page -= 1; }
+
+    const skip = page * pageSize;
+
     const files = await dbClient.dbClient.collection('files')
       .aggregate([
-        { $skip: skip },
         { $match: { userId, parentId: parentId } },
+        { $skip: skip },
         { $limit: pageSize },
       ]).toArray();
     //maybe a lala nora, remove localpath
