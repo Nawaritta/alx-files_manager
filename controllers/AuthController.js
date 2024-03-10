@@ -7,7 +7,10 @@ class AuthController {
   static async getConnect(req, res) {
     const credEnc = req.header('Authorization').split(' ')[1];
     const [email, password] = Buffer.from(credEnc, 'base64').toString('ascii').split(':');
-    const user = await dbClient.dbClient.collection('users').findOne({ email });
+    if (!email || !password) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const user = await dbClient.dbClient.collection('users').findOne({ email, password: sha1(password) });
     if (!user || user.password !== sha1(password)) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -21,7 +24,7 @@ class AuthController {
   }
 
   static async getDisconnect(req, res) {
-    const token = req.headers['X-Token'];
+    const token = req.header('X-Token');
     const userId = await redisClient.get(`auth_${token}`);
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
