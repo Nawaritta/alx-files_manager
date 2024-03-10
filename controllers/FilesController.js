@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
@@ -14,7 +13,9 @@ class FilesController {
     const userId = await redisClient.get(`auth_${token}`);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const { name, type, isPublic, data, parentId } = req.body;
+    const {
+      name, type, isPublic, data, parentId,
+    } = req.body;
 
     if (!name) return res.status(400).json({ error: 'Missing name' });
     if (!type || !['folder', 'file', 'image'].includes(type)) return res.status(400).json({ error: 'Missing type' });
@@ -32,11 +33,13 @@ class FilesController {
       name,
       type,
       isPublic: isPublic || false,
-      parentId: parentId || 0
+      parentId: parentId || 0,
     };
 
     if (type === 'folder') {
-      const newFolder = await dbClient.dbClient.collection('files').insertOne({ userId, name, type, isPublic: isPublic || false, parentId: parentId || 0 });
+      const newFolder = await dbClient.dbClient.collection('files').insertOne({
+        userId, name, type, isPublic: isPublic || false, parentId: parentId || 0,
+      });
       return res.status(201).json({ id: newFolder.insertedId, ...folderData });
     }
 
@@ -44,7 +47,6 @@ class FilesController {
     const localPath = path.join(folderName, uuidv4());
     await fs.promises.mkdir(folderName, { recursive: true });
     await fs.promises.writeFile(path.join(folderName, uuidv4()), Buffer.from(data, 'base64'));
-
 
     const newFile = await dbClient.dbClient.collection('files').insertOne({ localPath, ...folderData });
 
