@@ -75,6 +75,11 @@ class FilesController {
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const parentId = req.query.parentId || '0';
+    const query = { userId };
+    if (parentId !== '0') {
+      query.parentId = ObjectId(parentId);
+    }
+
     const filesCount = await dbClient.dbClient.collection('files')
       .countDocuments({ userId, parentId: ObjectId(parentId) });
 
@@ -85,8 +90,7 @@ class FilesController {
     const pageSize = 20;
     const skip = page * pageSize;
     // if (page > 0) {
-    //   page -= 1;
-    // }
+    //   page -= 1; }
 
     const files = await dbClient.dbClient.collection('files')
       .aggregate([
