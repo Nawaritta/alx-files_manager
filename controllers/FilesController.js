@@ -64,7 +64,7 @@ class FilesController {
     const fileId = req.params.id;
     const file = await dbClient.dbClient.collection('files').findOne({ _id: ObjectId(fileId), userId });
     if (!file) return res.status(404).json({ error: 'Not found' });
-    delete file.localPath;
+    //delete file.localPath;
     return res.json(file);
   }
 
