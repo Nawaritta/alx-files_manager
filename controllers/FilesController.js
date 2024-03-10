@@ -81,12 +81,12 @@ class FilesController {
     if (filesCount === 0) {
       return res.json([]);
     }
-    let page = parseInt(req.query.page, 10) || 0;
+    const page = parseInt(req.query.page, 10) || 0;
     const pageSize = 20;
     const skip = page * pageSize;
-    if (page > 0) {
-      page -= 1;
-    }
+    // if (page > 0) {
+    //   page -= 1;
+    // }
 
     const files = await dbClient.dbClient.collection('files')
       .aggregate([
