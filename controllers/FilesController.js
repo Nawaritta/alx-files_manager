@@ -85,7 +85,7 @@ class FilesController {
     }
 
     const filesCount = await dbClient.dbClient.collection('files')
-      .countDocuments({ userId, parentId: parentId });
+      .countDocuments({ userId:ObjectId(userId), parentId: parentId });
 
     if (filesCount === 0) {
       return res.json([]);
@@ -99,7 +99,7 @@ class FilesController {
 
     const files = await dbClient.dbClient.collection('files')
       .aggregate([
-        { $match: { userId, parentId: parentId } },
+        { $match: { userId:ObjectId(userId), parentId: parentId } },
         { $skip: skip },
         { $limit: pageSize },
       ]).toArray();
