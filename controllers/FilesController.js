@@ -74,10 +74,19 @@ class FilesController {
     const userId = await redisClient.get(`auth_${token}`);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const parentId = req.query.parentId || 0;
-    const page = parseInt(req.query.page, 10) || 0;
+    const parentId = req.query.parentId || '0';
+    const filesCount = await dbClient.dbClient.collection('files')
+      .countDocuments({ userId, parentId: ObjectId(parentId) });
+
+    if (filesCount === 0) {
+      return res.json([]);
+    }
+    let page = parseInt(req.query.page, 10) || 0;
     const pageSize = 20;
     const skip = page * pageSize;
+    if (page > 0) {
+      page -= 1;
+    }
 
     const files = await dbClient.dbClient.collection('files')
       .aggregate([
