@@ -96,8 +96,8 @@ class FilesController {
     //   page -= 1; }
     const files = await dbClient.dbClient.collection('files')
       .aggregate([
-        { $match: { userId, parentId: parentId } },
         { $skip: skip },
+        { $match: { userId, parentId: parentId } },
         { $limit: pageSize },
       ]).toArray();
     //maybe a lala nora, remove localpath
