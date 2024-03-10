@@ -44,9 +44,10 @@ class FilesController {
     }
 
     const folderName = process.env.FOLDER_PATH || '/tmp/files_manager';
-    const localPath = path.join(folderName, uuidv4());
+    const fileId = uuidv4();
+    const localPath = path.join(folderName, fileId);
     await fs.promises.mkdir(folderName, { recursive: true });
-    await fs.promises.writeFile(path.join(folderName, uuidv4()), Buffer.from(data, 'base64'));
+    await fs.promises.writeFile(path.join(folderName, fileId), Buffer.from(data, 'base64'));
 
     const newFile = await dbClient.dbClient.collection('files').insertOne({ localPath, ...folderData });
 
@@ -59,11 +60,11 @@ class FilesController {
 
     const userId = await redisClient.get(`auth_${token}`);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
-
+    //catch fileId validation
     const fileId = req.params.id;
     const file = await dbClient.dbClient.collection('files').findOne({ _id: ObjectId(fileId), userId });
     if (!file) return res.status(404).json({ error: 'Not found' });
-
+    delete file.localPath;
     return res.json(file);
   }
 
@@ -72,16 +73,18 @@ class FilesController {
     if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
     const userId = await redisClient.get(`auth_${token}`);
+
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const parentId = req.query.parentId || '0';
-    const query = { userId };
-    if (parentId !== '0') {
-      query.parentId = ObjectId(parentId);
+    const parentId = req.query.parentId || 0;
+
+    //const query = { userId };
+    if (parentId !== 0) {
+      req.query.parentId = ObjectId(parentId);
     }
 
     const filesCount = await dbClient.dbClient.collection('files')
-      .countDocuments({ userId, parentId: ObjectId(parentId) });
+      .countDocuments({ userId, parentId: parentId });
 
     if (filesCount === 0) {
       return res.json([]);
@@ -91,14 +94,13 @@ class FilesController {
     const skip = page * pageSize;
     // if (page > 0) {
     //   page -= 1; }
-
     const files = await dbClient.dbClient.collection('files')
       .aggregate([
-        { $match: { userId, parentId: ObjectId(parentId) } },
+        { $match: { userId, parentId: parentId } },
         { $skip: skip },
         { $limit: pageSize },
       ]).toArray();
-
+    //maybe a lala nora, remove localpath
     return res.json(files);
   }
 }
