@@ -60,12 +60,12 @@ class FilesController {
 
     const userId = await redisClient.get(`auth_${token}`);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
-    //catch fileId validation
+    // catch fileId validation
     const fileId = req.params.id;
     const file = await dbClient.dbClient.collection('files').findOne({ _id: ObjectId(fileId), userId: ObjectId(userId) });
-    //const file = await dbClient.dbClient.collection('files').findOne({ _id: ObjectId(fileId), userId });
+
     if (!file) return res.status(404).json({ error: 'Not found' });
-    //delete file.localPath;
+    // delete file.localPath;
     return res.json(file);
   }
 
@@ -79,16 +79,16 @@ class FilesController {
 
     let parentId = req.query.parentId || '0';
 
-    //const query = { userId };
+    // const query = { userId };
     if (parentId !== '0') {
       parentId = ObjectId(parentId);
     }
 
-    console.log(userId, parentId)
+    console.log(userId, parentId);
     const filesCount = await dbClient.dbClient.collection('files')
-      .countDocuments({ userId: ObjectId(userId), parentId: parentId });
+      .countDocuments({ userId: ObjectId(userId), parentId });
     if (filesCount === '0') {
-      console.log("return empty list")
+      console.log('return empty list');
       return res.json([]);
     }
 
@@ -100,19 +100,17 @@ class FilesController {
     const skip = page * pageSize;
     const files = await dbClient.dbClient.collection('files')
       .aggregate([
-        { $match: { userId: ObjectId(userId), parentId: parentId } },
+        { $match: { userId: ObjectId(userId), parentId } },
         { $skip: skip },
         { $limit: pageSize },
       ]).toArray();
-    //maybe a lala nora, remove localpath
-    console.log(files)
-    const modifyResult = files.map(file => {
-      return {
-        ...file,
-        id: file._id, // rename _id to id
-        _id: undefined, //remove _id
-      };
-    });
+    // maybe a lala nora, remove localpath
+    console.log(files);
+    const modifyResult = files.map((file) => ({
+      ...file,
+      id: file._id, // rename _id to id
+      _id: undefined, // remove _id
+    }));
     return res.json(modifyResult);
   }
 }
