@@ -33,12 +33,12 @@ class FilesController {
       name,
       type,
       isPublic: isPublic || false,
-      parentId: parentId || 0,
+      parentId: parentId || '0',
     };
 
     if (type === 'folder') {
       const newFolder = await dbClient.dbClient.collection('files').insertOne({
-        userId, name, type, isPublic: isPublic || false, parentId: parentId || 0,
+        userId, name, type, isPublic: isPublic || false, parentId: parentId || '0',
       });
       return res.status(201).json({ id: newFolder.insertedId, ...folderData });
     }
@@ -62,7 +62,7 @@ class FilesController {
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
     //catch fileId validation
     const fileId = req.params.id;
-    const file = await dbClient.dbClient.collection('files').findOne({ _id: ObjectId(fileId), userId:ObjectId(userId) });
+    const file = await dbClient.dbClient.collection('files').findOne({ _id: ObjectId(fileId), userId: ObjectId(userId) });
     //const file = await dbClient.dbClient.collection('files').findOne({ _id: ObjectId(fileId), userId });
     if (!file) return res.status(404).json({ error: 'Not found' });
     //delete file.localPath;
@@ -77,34 +77,43 @@ class FilesController {
 
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const parentId = req.query.parentId || 0;
+    let parentId = req.query.parentId || '0';
 
     //const query = { userId };
-    if (parentId !== 0) {
-      req.query.parentId = ObjectId(parentId);
+    if (parentId !== '0') {
+      parentId = ObjectId(parentId);
     }
 
+    console.log(userId, parentId)
     const filesCount = await dbClient.dbClient.collection('files')
-      .countDocuments({ userId:ObjectId(userId), parentId: parentId });
-
-    if (filesCount === 0) {
+      .countDocuments({ userId: ObjectId(userId), parentId: parentId });
+    if (filesCount === '0') {
+      console.log("return empty list")
       return res.json([]);
     }
-    const page = parseInt(req.query.page, 10) || 0;
+
+    const page = parseInt(req.query.page, 10) || '0';
     const pageSize = 20;
     // if (page > 0) {
     //   page -= 1; }
 
     const skip = page * pageSize;
-
     const files = await dbClient.dbClient.collection('files')
       .aggregate([
-        { $match: { userId:ObjectId(userId), parentId: parentId } },
+        { $match: { userId: ObjectId(userId), parentId: parentId } },
         { $skip: skip },
         { $limit: pageSize },
       ]).toArray();
     //maybe a lala nora, remove localpath
-    return res.json(files);
+    console.log(files)
+    const modifyResult = files.map(file => {
+      return {
+        ...file,
+        id: file._id, // rename _id to id
+        _id: undefined, //remove _id
+      };
+    });
+    return res.json(modifyResult);
   }
 }
 
