@@ -33,7 +33,7 @@ class FilesController {
       name,
       type,
       isPublic: isPublic || false,
-      parentId: parentId || '0',
+      parentId: parentId || 0,
     };
 
     if (type === 'folder') {
