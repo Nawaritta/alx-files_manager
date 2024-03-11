@@ -21,13 +21,13 @@ class FilesController {
     if (!type || !['folder', 'file', 'image'].includes(type)) return res.status(400).json({ error: 'Missing type' });
     if (!data && type !== 'folder') return res.status(400).json({ error: 'Missing data' });
 
-    let parentId = req.body.parentId || 0;
-    if (parentId) {
+    let parentId = req.body.parentId || '0';
+    if (parentId !== '0') {
       const parentFile = await dbClient.dbClient.collection('files').findOne({ _id: ObjectId(parentId) });
       if (!parentFile) return res.status(400).json({ error: 'Parent not found' });
       if (parentFile.type !== 'folder') return res.status(400).json({ error: 'Parent is not a folder' });
     }
-    parentId = parentId !== 0 ? ObjectId(parentId) : 0;
+    parentId = parentId !== '0' ? ObjectId(parentId) : '0';
 
     const folderData = {
       userId,
@@ -40,6 +40,7 @@ class FilesController {
       const newFolder = await dbClient.dbClient.collection('files').insertOne({
         userId, name, type, isPublic: isPublic || false, parentId,
       });
+      folderData.parentId = parentId === '0' ? 0 : ObjectId(parentId);
       return res.status(201).json({ id: newFolder.insertedId, ...folderData });
     }
 
@@ -50,7 +51,7 @@ class FilesController {
     await fs.promises.writeFile(path.join(folderName, fileId), Buffer.from(data, 'base64'));
 
     const newFile = await dbClient.dbClient.collection('files').insertOne({ localPath, ...folderData });
-
+    folderData.parentId = parentId === '0' ? 0 : ObjectId(parentId);
     return res.status(201).json({ id: newFile.insertedId, localPath, ...folderData });
   }
 
