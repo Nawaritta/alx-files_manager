@@ -50,7 +50,6 @@ class FilesController {
     const fileId = uuidv4();
     const localPath = path.join(folderName, fileId);
 
-
     await fs.promises.mkdir(folderName, { recursive: true });
     await fs.promises.writeFile(path.join(folderName, fileId), Buffer.from(data, 'base64'));
 
@@ -159,7 +158,7 @@ class FilesController {
 
     if (file.type === 'folder') return res.status(400).json({ error: "A folder doesn't have content" });
 
-    let localPath = file.localPath;
+    let { localPath } = file;
     if (size) localPath = `${localPath}_${size}`;
 
     if (!fs.existsSync(localPath)) return res.status(404).json({ error: 'Not found' });
