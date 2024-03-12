@@ -8,14 +8,6 @@ class RedisClient {
     });
   }
 
-  // isAlive() {
-  //   return new Promise((resolve) => {
-  //     setTimeout(() => {
-  //       resolve(this.client.connected);
-  //     }, 1000);
-  //   });
-  // }
-
   isAlive() {
     return this.client.connected;
   }
