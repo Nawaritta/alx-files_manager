@@ -5,6 +5,7 @@ import { ObjectId } from 'mongodb';
 import mime from 'mime-types';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
+import fileQueue from '../worker';
 
 class FilesController {
   static async postUpload(req, res) {
@@ -48,10 +49,17 @@ class FilesController {
     const folderName = process.env.FOLDER_PATH || '/tmp/files_manager';
     const fileId = uuidv4();
     const localPath = path.join(folderName, fileId);
+
+
     await fs.promises.mkdir(folderName, { recursive: true });
     await fs.promises.writeFile(path.join(folderName, fileId), Buffer.from(data, 'base64'));
 
     const newFile = await dbClient.dbClient.collection('files').insertOne({ localPath, ...folderData });
+
+    if (type === 'image') {
+      fileQueue.add({ fileId: newFile.insertedId, userId });
+    }
+
     folderData.parentId = parentId === '0' ? 0 : ObjectId(parentId);
     return res.status(201).json({ id: newFile.insertedId, localPath, ...folderData });
   }
@@ -141,6 +149,7 @@ class FilesController {
     const token = req.header('X-Token');
     const userId = await redisClient.get(`auth_${token}`);
     const fileId = req.params.id;
+    const { size } = req.query;
     const file = await dbClient.dbClient.collection('files').findOne({ _id: ObjectId(fileId) });
     // file private and user not signin
     // file private and user is sign in but not the owner
@@ -150,10 +159,13 @@ class FilesController {
 
     if (file.type === 'folder') return res.status(400).json({ error: "A folder doesn't have content" });
 
-    if (!fs.existsSync(file.localPath)) return res.status(404).json({ error: 'Not found' });
+    let localPath = file.localPath;
+    if (size) localPath = `${localPath}_${size}`;
+
+    if (!fs.existsSync(localPath)) return res.status(404).json({ error: 'Not found' });
 
     res.setHeader('Content-Type', mime.lookup(file.name));
-    return res.sendFile(file.localPath);
+    return res.sendFile(localPath);
   }
 }
 
